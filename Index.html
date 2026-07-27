@@ -1,0 +1,716 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#2f6b6b">
+<title>Coastal Team Calendar</title>
+<link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='22' fill='%232f6b6b'/><text x='50' y='70' font-size='58' font-family='sans-serif' font-weight='bold' fill='white' text-anchor='middle'>C</text></svg>">
+<style>
+  :root{
+    --bg:#f6f6f4; --panel:#fff; --ink:#1b1c1e; --ink2:#494b50; --muted:#8b8d91;
+    --line:#eae9e5; --line2:#f1f0ec; --accent:#2f6b6b; --accent-ink:#204d4d; --accent-soft:#eaf2f1;
+    --shadow:0 1px 2px rgba(20,20,20,.04),0 8px 24px rgba(20,20,20,.06);
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{margin:0;padding:0}
+  body{background:var(--bg);color:var(--ink);
+    font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica Neue',sans-serif;
+    font-size:15px;line-height:1.5;-webkit-font-smoothing:antialiased}
+  .wrap{max-width:1240px;margin:0 auto;padding:0 16px}
+
+  header.top{position:sticky;top:0;z-index:30;background:var(--bg);
+    padding:calc(12px + env(safe-area-inset-top)) 0 0;border-bottom:1px solid var(--line)}
+  .brandrow{display:flex;align-items:center;justify-content:space-between;gap:12px}
+  .brand{display:flex;align-items:center;gap:10px;min-width:0}
+  .mark{width:34px;height:34px;border-radius:9px;background:var(--accent);color:#fff;
+    display:flex;align-items:center;justify-content:center;font-weight:700;font-size:15px;flex-shrink:0}
+  .brand h1{font-size:16px;font-weight:700;margin:0;letter-spacing:-.2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .brand p{margin:1px 0 0;color:var(--muted);font-size:11.5px}
+  .headtools{display:flex;align-items:center;gap:8px;flex-shrink:0}
+  .status{display:flex;align-items:center;gap:6px;color:var(--muted);font-size:11.5px;white-space:nowrap}
+  .dot{width:8px;height:8px;border-radius:50%;background:#57b894;flex-shrink:0}
+  .dot.saving{background:#e0a83e} .dot.error{background:#d0544f} .dot.loading{background:#b8b7b1}
+  .btn{border:1px solid var(--line);background:var(--panel);color:var(--ink2);padding:10px 14px;
+    border-radius:10px;font-size:13px;font-weight:500;cursor:pointer;font-family:inherit;white-space:nowrap}
+  .btn:active{background:#f0efec}
+  .btn.primary{background:var(--accent);color:#fff;border-color:var(--accent)}
+  .iconbtn{width:40px;height:40px;padding:0;display:flex;align-items:center;justify-content:center;font-size:18px}
+
+  nav.tabs{display:flex;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+  nav.tabs::-webkit-scrollbar{display:none}
+  .tab{padding:13px 2px;margin-right:22px;font-size:14.5px;font-weight:500;color:var(--muted);
+    cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px;white-space:nowrap;
+    display:flex;align-items:center;gap:7px}
+  .tab.active{color:var(--ink);border-bottom-color:var(--accent);font-weight:600}
+  .tab .cnt{font-size:11px;color:var(--muted);background:#efeeea;border-radius:20px;padding:1px 7px;font-weight:600}
+  .tab.active .cnt{background:var(--accent-soft);color:var(--accent-ink)}
+
+  main{padding:16px 0 calc(90px + env(safe-area-inset-bottom))}
+
+  .toolbar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:14px}
+  .search{position:relative;flex:1 1 100%;min-width:140px}
+  .search input{width:100%;border:1px solid var(--line);border-radius:10px;padding:12px 12px 12px 36px;
+    font-size:16px;font-family:inherit;background:var(--panel);color:var(--ink)}
+  .search input:focus{outline:none;border-color:var(--accent)}
+  .search svg{position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--muted)}
+  select.filter{border:1px solid var(--line);border-radius:10px;padding:11px 10px;font-size:13px;
+    font-family:inherit;background:var(--panel);color:var(--ink2);flex:1 1 30%;min-width:100px}
+  .hint{color:var(--muted);font-size:12.5px}
+
+  .weekcard{background:var(--panel);border:1px solid var(--line);border-radius:14px;
+    box-shadow:var(--shadow);padding:15px 16px;margin-bottom:12px}
+  .wkhead{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:10px}
+  .wk{font-weight:700;font-size:16px}
+  .wk small{display:block;color:var(--muted);font-weight:500;font-size:12px;margin-top:2px}
+  .theme-chip{font-size:10.5px;font-weight:700;letter-spacing:.3px;padding:4px 9px;border-radius:6px;white-space:nowrap}
+  .t-base{background:#eef3f7;color:#3a6ea5}
+  .t-reset{background:#f0f1ee;color:#6a7152}
+  .t-level{background:#f6eef3;color:#9a4d7a}
+  .sect{margin-top:12px;padding-top:12px;border-top:1px solid var(--line2)}
+  .sect h4{margin:0 0 8px;font-size:10.5px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:var(--muted)}
+  .mp{display:flex;gap:9px;font-size:14px;color:var(--ink2);line-height:1.4;padding:6px 0;cursor:pointer}
+  .mp .d{color:var(--muted);font-weight:700;font-size:11.5px;min-width:30px;flex-shrink:0;padding-top:2px}
+  .yt-line{font-size:14px;color:var(--ink2);line-height:1.4;padding:6px 0;cursor:pointer}
+  .empty-line{color:#c3c3bd;font-size:13.5px}
+  .event-tag{background:#fdf3e7;color:#a76b2e;border:1px solid #f6e3c9;border-radius:8px;
+    padding:8px 10px;font-size:13px;font-weight:500;line-height:1.35;margin-bottom:6px}
+  .add-ev{color:var(--accent);font-size:13.5px;font-weight:600;background:none;border:none;
+    padding:8px 0;font-family:inherit;text-align:left;cursor:pointer}
+
+  .pill{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:700;
+    padding:4px 10px;border-radius:20px;white-space:nowrap}
+  .pill::before{content:'';width:6px;height:6px;border-radius:50%;background:currentColor;opacity:.9}
+  .s-Idea{background:#f0f0ec;color:#84867f}
+  .s-Planned{background:#eef2f8;color:#4a72a6}
+  .s-Filming{background:#fbf1e3;color:#b07d34}
+  .s-Editing{background:#f4eef8;color:#8256a8}
+  .s-Scheduled{background:#e8f3f1;color:#2f7d6f}
+  .s-Posted{background:#e9f5ec;color:#43955f}
+  .s-Needscontent,.s-Needsyourinput{background:#fdeaea;color:#c0392b}
+
+  .grid{display:grid;grid-template-columns:1fr;gap:12px}
+  @media(min-width:700px){.grid{grid-template-columns:repeat(auto-fill,minmax(300px,1fr))}}
+  .post{background:var(--panel);border:1px solid var(--line);border-radius:13px;padding:15px 16px;
+    cursor:pointer;box-shadow:0 1px 2px rgba(20,20,20,.03)}
+  .post:active{border-color:var(--accent)}
+  .post .ph{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:8px}
+  .post .date{font-size:12px;font-weight:600;color:var(--muted)}
+  .post .date b{color:var(--accent-ink)}
+  .post h4{margin:0 0 9px;font-size:15px;font-weight:600;line-height:1.35}
+  .tags{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:9px}
+  .tag{font-size:10.5px;font-weight:700;padding:3px 8px;border-radius:6px;background:#f2f1ed;color:#77796f}
+  .tag.pillar{background:var(--accent-soft);color:var(--accent-ink)}
+  .tag.season{background:#fdf3e7;color:#a76b2e}
+  .post .hook{font-size:13px;color:var(--muted);line-height:1.45;
+    display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+  .post .pf{display:flex;justify-content:space-between;gap:8px;margin-top:10px;padding-top:9px;
+    border-top:1px solid var(--line2);font-size:11.5px;color:var(--muted)}
+
+  .ytlist{display:flex;flex-direction:column;gap:12px}
+  .yt{background:var(--panel);border:1px solid var(--line);border-radius:13px;padding:16px 17px;
+    cursor:pointer;box-shadow:0 1px 2px rgba(20,20,20,.03)}
+  .yt .yh{display:flex;justify-content:space-between;gap:12px;align-items:flex-start}
+  .yt .num{width:42px;height:42px;border-radius:10px;background:#fdeaea;color:#c0392b;
+    display:flex;align-items:center;justify-content:center;font-weight:700;font-size:12.5px;flex-shrink:0}
+  .yt h3{margin:0 0 4px;font-size:15.5px;font-weight:600;line-height:1.3}
+  .yt .meta{font-size:12.5px;color:var(--muted)}
+  .yt .out{margin-top:11px;font-size:13px;color:var(--ink2);line-height:1.5;padding-top:11px;border-top:1px solid var(--line2)}
+
+  .sec{display:flex;align-items:center;gap:10px;margin:0 0 12px;flex-wrap:wrap}
+  .sec h2{font-size:16px;font-weight:600;margin:0}
+  .sec span{color:var(--muted);font-size:13px}
+
+  .scrim{position:fixed;inset:0;background:rgba(20,20,22,.35);opacity:0;pointer-events:none;transition:.2s;z-index:40}
+  .scrim.open{opacity:1;pointer-events:auto}
+  .drawer{position:fixed;top:0;right:0;height:100%;width:520px;max-width:100vw;background:var(--panel);
+    box-shadow:-10px 0 40px rgba(20,20,20,.14);transform:translateX(100%);
+    transition:transform .24s cubic-bezier(.4,0,.2,1);z-index:50;display:flex;flex-direction:column}
+  .drawer.open{transform:translateX(0)}
+  .dhead{padding:calc(16px + env(safe-area-inset-top)) 18px 14px;border-bottom:1px solid var(--line);
+    display:flex;justify-content:space-between;align-items:center;gap:12px}
+  .dhead .dt{font-size:11px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:var(--accent-ink)}
+  .dbody{padding:16px 18px;overflow-y:auto;flex:1;-webkit-overflow-scrolling:touch}
+  .dfoot{padding:12px 18px calc(12px + env(safe-area-inset-bottom));border-top:1px solid var(--line);
+    display:flex;justify-content:space-between;gap:10px;align-items:center}
+  .x{background:none;border:none;font-size:28px;color:var(--muted);cursor:pointer;line-height:1;padding:0 8px}
+  .field{margin-bottom:15px}
+  .field label{display:block;font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;
+    color:var(--muted);margin-bottom:6px}
+  .field input,.field textarea,.field select{width:100%;border:1px solid var(--line);border-radius:10px;
+    padding:12px;font-size:16px;font-family:inherit;color:var(--ink);background:#fff;resize:vertical}
+  .field input:focus,.field textarea:focus,.field select:focus{outline:none;border-color:var(--accent);
+    box-shadow:0 0 0 3px var(--accent-soft)}
+  .field textarea{min-height:90px;line-height:1.5}
+  .row2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .cascade-note{background:var(--accent-soft);border:1px solid #d4e6e3;border-radius:10px;
+    padding:12px 14px;font-size:13px;color:var(--accent-ink);line-height:1.5;margin-bottom:16px}
+  .chk{display:flex;align-items:center;gap:10px;font-size:15px;color:var(--ink2);margin-bottom:12px}
+  .chk input{width:20px;height:20px;accent-color:var(--accent)}
+  .empty-state,.loading{text-align:center;color:var(--muted);padding:60px 20px;font-size:14px}
+  .spin{width:26px;height:26px;border:2.5px solid var(--line);border-top-color:var(--accent);
+    border-radius:50%;animation:sp .7s linear infinite;margin:0 auto 14px}
+  @keyframes sp{to{transform:rotate(360deg)}}
+
+  /* view density toggle */
+  .seg{display:inline-flex;border:1px solid var(--line);border-radius:9px;overflow:hidden;background:var(--panel)}
+  .seg button{border:none;background:none;padding:8px 13px;font-size:12.5px;font-weight:600;color:var(--muted);
+    cursor:pointer;font-family:inherit}
+  .seg button.on{background:var(--accent);color:#fff}
+
+  /* compact rows */
+  .cwk{background:var(--panel);border:1px solid var(--line);border-radius:12px;margin-bottom:8px;overflow:hidden}
+  .cwk-head{display:flex;align-items:center;gap:10px;padding:12px 14px;cursor:pointer}
+  .cwk-head .id{font-weight:700;font-size:14.5px;min-width:34px}
+  .cwk-head .dt{color:var(--muted);font-size:12px;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .cwk-head .cts{display:flex;gap:6px;flex-shrink:0}
+  .mini{font-size:10.5px;font-weight:700;padding:3px 7px;border-radius:6px;background:#f2f1ed;color:#77796f;white-space:nowrap}
+  .mini.ev{background:#fdf3e7;color:#a76b2e}
+  .mini.need{background:#fdeaea;color:#c0392b}
+  .chev{color:var(--muted);font-size:12px;flex-shrink:0;transition:transform .15s}
+  .cwk.open .chev{transform:rotate(90deg)}
+  .cwk-body{display:none;padding:0 14px 12px}
+  .cwk.open .cwk-body{display:block}
+
+  .crow{display:flex;align-items:center;gap:9px;padding:9px 0;border-top:1px solid var(--line2);cursor:pointer}
+  .crow .d{color:var(--muted);font-weight:700;font-size:11px;min-width:28px;flex-shrink:0}
+  .crow .t{flex:1;min-width:0;font-size:13.5px;color:var(--ink2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .crow .s{flex-shrink:0}
+
+  /* compact post list */
+  .clist{background:var(--panel);border:1px solid var(--line);border-radius:12px;overflow:hidden}
+  .cpost{display:flex;align-items:center;gap:10px;padding:12px 14px;border-bottom:1px solid var(--line2);cursor:pointer}
+  .cpost:last-child{border-bottom:none}
+  .cpost .dt{font-size:11.5px;font-weight:700;color:var(--accent-ink);min-width:52px;flex-shrink:0}
+  .cpost .t{flex:1;min-width:0;font-size:13.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+  /* delete / row actions */
+  .del{color:#c0392b;background:none;border:1px solid #f0cccc;border-radius:9px;padding:9px 13px;
+    font-size:13px;font-weight:600;cursor:pointer;font-family:inherit}
+  .del:active{background:#fdeaea}
+  .evrow{display:flex;align-items:center;gap:8px;margin-bottom:6px}
+  .evrow .event-tag{margin-bottom:0;flex:1}
+  .xbtn{background:none;border:none;color:#c0392b;font-size:19px;line-height:1;padding:6px 9px;
+    cursor:pointer;border-radius:8px;flex-shrink:0}
+  .xbtn:active{background:#fdeaea}
+  .xbtn.armed{background:#c0392b;color:#fff;font-size:12px;font-weight:700;padding:7px 10px;width:auto}
+  .del.armed{background:#c0392b;color:#fff;border-color:#c0392b}
+  .askbox{background:var(--panel);border:1px solid var(--line);border-radius:14px;
+    box-shadow:var(--shadow);padding:16px;margin-bottom:16px}
+  .askbox textarea{width:100%;border:1px solid var(--line);border-radius:10px;padding:13px;
+    font-size:16px;font-family:inherit;color:var(--ink);background:#fff;min-height:96px;resize:vertical;line-height:1.5}
+  .askbox textarea:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
+  .askrow{display:flex;align-items:center;gap:10px;margin-top:10px}
+  .chips{display:flex;flex-wrap:wrap;gap:7px;margin-top:10px}
+  .chip{font-size:12.5px;font-weight:600;padding:7px 11px;border-radius:20px;background:#f2f1ed;
+    color:var(--ink2);border:none;cursor:pointer;font-family:inherit}
+  .chip:active{background:var(--accent-soft);color:var(--accent-ink)}
+  .req{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:13px 15px;margin-bottom:9px}
+  .req .rh{display:flex;align-items:center;gap:9px;margin-bottom:6px}
+  .req .rt{font-size:11.5px;color:var(--muted);flex:1}
+  .req .rq{font-size:14.5px;line-height:1.45;color:var(--ink)}
+  .req .rr{margin-top:9px;padding-top:9px;border-top:1px solid var(--line2);
+    font-size:13.5px;color:var(--ink2);line-height:1.5;white-space:pre-wrap}
+  .s-New{background:#fdf3e7;color:#a76b2e}
+  .s-Done{background:#e9f5ec;color:#43955f}
+  .errbox{background:#fdeaea;border:1px solid #f5c9c9;color:#a33;border-radius:12px;
+    padding:14px 16px;font-size:13.5px;line-height:1.5;margin:20px 0}
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="wrap">
+    <div class="brandrow">
+      <div class="brand">
+        <div class="mark">C</div>
+        <div><h1>Team Calendar</h1><p>Coastal Fitness</p></div>
+      </div>
+      <div class="headtools">
+        <div class="status"><span class="dot loading" id="statusDot"></span><span id="statusTxt"></span></div>
+        <button class="btn iconbtn" title="Reload" onclick="boot()">&#8635;</button>
+      </div>
+    </div>
+    <nav class="tabs" id="tabs">
+      <div class="tab active" data-tab="overview">Overview <span class="cnt" id="c-ov">–</span></div>
+      <div class="tab" data-tab="ig">Instagram <span class="cnt" id="c-ig">–</span></div>
+      <div class="tab" data-tab="yt">YouTube <span class="cnt" id="c-yt">–</span></div>
+      <div class="tab" data-tab="ask">Ask Claude <span class="cnt" id="c-ask">–</span></div>
+    </nav>
+  </div>
+</header>
+
+<main class="wrap" id="view"><div class="loading"><div class="spin"></div>Loading your calendar…</div></main>
+
+<div class="scrim" id="scrim" onclick="closeDrawer()"></div>
+<aside class="drawer" id="drawer">
+  <div class="dhead"><div class="dt" id="drawerType">Edit</div><button class="x" onclick="closeDrawer()">&times;</button></div>
+  <div class="dbody" id="drawerBody"></div>
+  <div class="dfoot" id="drawerFoot"></div>
+</aside>
+
+<script>
+var API = 'https://script.google.com/macros/s/AKfycbybVzm50uPFT7CFJ3-j3JqBgnDmyO-QBncYIEqg1TPYIDcrHwteclzv4j3aS1ImNccJnQ/exec';
+
+var PILLARS=['Authority/Longevity','Educational','Testimonials','Behind the Scenes','Healthy Living','Services Info'];
+var STATUSES=['Idea','Planned','Filming','Editing','Scheduled','Posted','Needs content','Needs your input'];
+var IG_TYPES=['Educational','Relatable','Inspirational','Entertaining','Promotional'];
+
+var state={weeks:[],ig:[],yt:[]};
+var requests=[];
+var askText='';
+var tab='overview';
+var igFilter={q:'',pillar:'',status:'',week:''};
+var ovFilter={q:'',theme:'',status:''};
+var drawerCtx=null, saveTimer=null;
+var density = localStorage.getItem('coastalDensity') || 'large';
+var openWeeks = {};
+function setDensity(d){ density=d; try{localStorage.setItem('coastalDensity',d);}catch(e){} render(); }
+function toggleWeek(id){ openWeeks[id]=!openWeeks[id]; render(); }
+function densityBar(){
+  return '<div class="seg"><button class="'+(density==='small'?'on':'')+'" onclick="setDensity(\'small\')">Compact</button>'+
+         '<button class="'+(density==='large'?'on':'')+'" onclick="setDensity(\'large\')">Detailed</button></div>';
+}
+
+function call(params){
+  var qs = Object.keys(params).map(function(k){ return k+'='+encodeURIComponent(params[k]); }).join('&');
+  return fetch(API+'?'+qs, {credentials:'omit'})
+    .then(function(r){ if(!r.ok) throw new Error('HTTP '+r.status); return r.json(); })
+    .then(function(j){ if(j && j.ok===false) throw new Error(j.error||'error'); return j; });
+}
+function setStatus(kind){
+  var d=document.getElementById('statusDot'), t=document.getElementById('statusTxt');
+  d.className='dot '+(kind==='synced'?'':kind);
+  t.textContent={synced:'Synced',saving:'Saving…',error:'Offline',loading:'Loading…'}[kind]||'';
+}
+function esc(s){return (s==null?'':String(s)).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
+function cls(s){return 's-'+String(s||'Idea').replace(/\s+/g,'');}
+function themeClass(t){if(/BASE/.test(t))return 't-base';if(/RESET/.test(t))return 't-reset';return 't-level';}
+function fmtDate(d){if(!d)return '';var dt=new Date(String(d).slice(0,10)+'T00:00');if(isNaN(dt))return d;
+  return dt.toLocaleDateString('en-GB',{day:'2-digit',month:'short'});}
+function uid(p){return p+'-'+Math.random().toString(36).slice(2,8);}
+
+function boot(){
+  setStatus('loading');
+  document.getElementById('view').innerHTML='<div class="loading"><div class="spin"></div>Loading your calendar…</div>';
+  call({api:'state'}).then(function(j){
+    state=j.data; requests=j.requests||[]; setStatus('synced'); render();
+  }).catch(function(e){
+    setStatus('error');
+    document.getElementById('view').innerHTML='<div class="errbox"><b>Couldn\'t load the calendar.</b><br>'+
+      esc(String(e.message||e))+'<br><br>Check your internet connection, then tap reload.</div>'+
+      '<div style="text-align:center"><button class="btn primary" onclick="boot()">Try again</button></div>';
+  });
+}
+
+document.getElementById('tabs').addEventListener('click',function(e){
+  var t=e.target.closest('.tab'); if(!t)return; tab=t.dataset.tab;
+  [].forEach.call(document.querySelectorAll('.tab'),function(x){x.classList.toggle('active',x.dataset.tab===tab);});
+  render();
+});
+function counts(){
+  document.getElementById('c-ov').textContent=state.weeks.length;
+  document.getElementById('c-ig').textContent=state.ig.length;
+  document.getElementById('c-yt').textContent=state.yt.length;
+  var nNew=requests.filter(function(r){return r.status==='New';}).length;
+  document.getElementById('c-ask').textContent=nNew?nNew:'0';
+}
+function render(){counts();
+  document.getElementById('view').innerHTML = tab==='overview'?renderOverview():tab==='ig'?renderIG():tab==='yt'?renderYT():renderAsk();}
+
+function weekMatches(w){
+  var f=ovFilter;
+  var igs=state.ig.filter(function(p){return p.week===w.id;});
+  var yts=state.yt.filter(function(y){return y.week===w.id;});
+  var items=igs.concat(yts);
+  if(f.theme && w.theme!==f.theme) return false;
+  if(f.status){
+    var any=items.filter(function(x){return x.status===f.status;}).length;
+    if(!any) return false;
+  }
+  if(f.q){
+    var q=f.q.toLowerCase();
+    var hay=[w.id,w.dates,w.theme,(w.events||[]).join(' '),w.podcast]
+      .concat(items.map(function(x){return [x.title,x.hook,x.pillar,x.type,x.seasonal].join(' ');}))
+      .join(' ').toLowerCase();
+    if(hay.indexOf(q)<0) return false;
+  }
+  return true;
+}
+function ovFiltered(){ return state.weeks.filter(weekMatches); }
+function ovActive(){ return !!(ovFilter.q||ovFilter.theme||ovFilter.status); }
+function rerenderOV(){
+  document.getElementById('view').innerHTML=renderOverview();
+  var s=document.querySelector('.search input');
+  if(s&&ovFilter.q){s.focus();s.setSelectionRange(s.value.length,s.value.length);}
+}
+function renderOverview(){
+  var themes=[]; state.weeks.forEach(function(w){ if(themes.indexOf(w.theme)<0) themes.push(w.theme); });
+  var opt=function(arr,sel){return arr.map(function(x){return '<option '+(x===sel?'selected':'')+'>'+x+'</option>';}).join('');};
+  var f=ovFilter;
+  var shown=ovFiltered();
+  var head =
+    '<div class="toolbar">'+
+      '<div class="search"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>'+
+      '<input placeholder="Search weeks, events, posts\u2026" value="'+esc(f.q)+'" oninput="ovFilter.q=this.value;rerenderOV()"></div>'+
+      '<select class="filter" onchange="ovFilter.theme=this.value;rerenderOV()"><option value="">All themes</option>'+opt(themes,f.theme)+'</select>'+
+      '<select class="filter" onchange="ovFilter.status=this.value;rerenderOV()"><option value="">All status</option>'+opt(STATUSES,f.status)+'</select>'+
+      (ovActive()?'<button class="btn" onclick="ovFilter={q:\'\',theme:\'\',status:\'\'};rerenderOV()">Clear</button>':'')+
+    '</div>'+
+    '<div class="sec"><h2>Season overview</h2>'+
+    '<span class="hint">'+(ovActive()? shown.length+' of '+state.weeks.length+' weeks'
+      : (density==='small'?'Tap a week to expand.':'Tap a post to edit.'))+'</span>'+
+    '<span style="margin-left:auto">'+densityBar()+'</span></div>';
+  if(!shown.length) return head+'<div class="empty-state">No weeks match your search.</div>';
+
+  if(density==='small'){
+    var rows = shown.map(function(w){
+      var igs=state.ig.filter(function(p){return p.week===w.id;})
+        .sort(function(a,b){return String(a.date).localeCompare(String(b.date));});
+      var yts=state.yt.filter(function(y){return y.week===w.id;});
+      var evs=(w.events||[]);
+      var needs=igs.concat(yts).filter(function(x){return String(x.status).indexOf('Needs')===0;}).length;
+      var chips='<span class="mini">'+igs.length+' IG</span>'+
+                (yts.length?'<span class="mini">'+yts.length+' YT</span>':'')+
+                (evs.length?'<span class="mini ev">'+evs.length+' event'+(evs.length>1?'s':'')+'</span>':'')+
+                (needs?'<span class="mini need">'+needs+' to write</span>':'');
+      var body='';
+      evs.forEach(function(ev,i){
+        body+='<div class="evrow"><div class="event-tag">📌 '+esc(ev)+'</div>'+
+              '<button class="xbtn" onclick="removeEvent(\''+w.id+'\','+i+',event)">&times;</button></div>';
+      });
+      igs.forEach(function(pp){
+        body+='<div class="crow" onclick="editIG(\''+pp.id+'\')"><span class="d">'+esc(pp.day)+'</span>'+
+              '<span class="t">'+esc(pp.title)+'</span>'+
+              '<span class="s pill '+cls(pp.status)+'">'+esc(pp.status)+'</span></div>';
+      });
+      yts.forEach(function(y){
+        body+='<div class="crow" onclick="editYT(\''+y.id+'\')"><span class="d">YT</span>'+
+              '<span class="t">'+esc(y.title)+'</span>'+
+              '<span class="s pill '+cls(y.status)+'">'+esc(y.status)+'</span></div>';
+      });
+      body+='<div class="crow" style="justify-content:flex-start" onclick="addEvent(\''+w.id+'\')">'+
+            '<span class="add-ev">+ Add event</span></div>';
+      return '<div class="cwk'+((openWeeks[w.id]||ovActive())?' open':'')+'">'+
+        '<div class="cwk-head" onclick="toggleWeek(\''+w.id+'\')">'+
+          '<span class="chev">▶</span>'+
+          '<span class="id">'+esc(w.id)+'</span>'+
+          '<span class="dt">'+esc(w.dates)+'</span>'+
+          '<span class="cts">'+chips+'</span>'+
+        '</div><div class="cwk-body">'+body+'</div></div>';
+    }).join('');
+    return head+rows;
+  }
+
+  var out = shown.map(function(w){
+    var igs=state.ig.filter(function(p){return p.week===w.id;})
+      .sort(function(a,b){return String(a.date).localeCompare(String(b.date));});
+    var yts=state.yt.filter(function(y){return y.week===w.id;});
+    var posts = igs.length ? igs.map(function(p){
+      return '<div class="mp" onclick="editIG(\''+p.id+'\')"><span class="d">'+esc(p.day)+'</span>'+
+             '<span>'+esc(p.title)+'</span></div>'; }).join('')
+      : '<div class="empty-line">No posts yet</div>';
+    var ytHtml = yts.length ? yts.map(function(y){
+      return '<div class="yt-line" onclick="editYT(\''+y.id+'\')">▸ '+esc(y.title)+'</div>'; }).join('')
+      : '<div class="empty-line">None</div>';
+    var events=(w.events||[]).map(function(ev,i){
+      return '<div class="evrow"><div class="event-tag">📌 '+esc(ev)+'</div>'+
+             '<button class="xbtn" onclick="removeEvent(\''+w.id+'\','+i+',event)">&times;</button></div>'; }).join('');
+    return '<div class="weekcard">'+
+      '<div class="wkhead"><div class="wk">'+esc(w.id)+'<small>'+esc(w.dates)+'</small></div>'+
+      '<span class="theme-chip '+themeClass(w.theme)+'">'+esc(w.theme)+'</span></div>'+
+      '<div class="sect"><h4>Events / moments</h4>'+events+
+        '<button class="add-ev" onclick="addEvent(\''+w.id+'\')">+ Add event</button></div>'+
+      '<div class="sect"><h4>Instagram</h4>'+posts+'</div>'+
+      '<div class="sect"><h4>YouTube</h4>'+ytHtml+'</div>'+
+      (w.podcast && w.podcast!=='-' ? '<div class="sect"><h4>Podcast</h4><div class="yt-line">🎙 '+esc(w.podcast)+'</div></div>' : '')+
+    '</div>';
+  }).join('');
+  return head+out;
+}
+
+function renderIG(){
+  var weeks=state.weeks.map(function(w){return w.id;});
+  var list=state.ig.slice().sort(function(a,b){return String(a.date).localeCompare(String(b.date));});
+  var f=igFilter;
+  if(f.q){var q=f.q.toLowerCase();list=list.filter(function(p){return (String(p.title)+p.hook+p.pillar).toLowerCase().indexOf(q)>=0;});}
+  if(f.pillar)list=list.filter(function(p){return p.pillar===f.pillar;});
+  if(f.status)list=list.filter(function(p){return p.status===f.status;});
+  if(f.week)list=list.filter(function(p){return p.week===f.week;});
+  var opt=function(arr,sel){return arr.map(function(x){return '<option '+(x===sel?'selected':'')+'>'+x+'</option>';}).join('');};
+  var cards;
+  if(density==='small'){
+    cards = list.length ? '<div class="clist">'+list.map(function(p){
+      return '<div class="cpost" onclick="editIG(\''+p.id+'\')">'+
+        '<span class="dt">'+fmtDate(p.date)+'</span>'+
+        '<span class="t">'+esc(p.title)+'</span>'+
+        '<span class="pill '+cls(p.status)+'">'+esc(p.status)+'</span></div>';
+    }).join('')+'</div>' : '<div class="empty-state">No posts match your filters.</div>';
+  } else {
+    cards = list.length ? '<div class="grid">'+list.map(function(p){
+      return '<div class="post" onclick="editIG(\''+p.id+'\')">'+
+        '<div class="ph"><span class="date"><b>'+fmtDate(p.date)+'</b> · '+esc(p.day)+' · '+esc(p.week)+'</span>'+
+        '<span class="pill '+cls(p.status)+'">'+esc(p.status)+'</span></div>'+
+        '<h4>'+esc(p.title)+'</h4>'+
+        '<div class="tags"><span class="tag pillar">'+esc(p.pillar)+'</span><span class="tag">'+esc(p.type)+'</span>'+
+        (p.seasonal?'<span class="tag season">'+esc(p.seasonal)+'</span>':'')+'</div>'+
+        '<div class="hook">'+esc(p.hook)+'</div>'+
+        '<div class="pf"><span>🎬 '+esc(p.format)+'</span><span>'+(p.filmBy?'Film by '+fmtDate(p.filmBy):'')+'</span></div>'+
+      '</div>';
+    }).join('')+'</div>' : '<div class="empty-state">No posts match your filters.</div>';
+  }
+  return '<div class="toolbar">'+
+    '<div class="search"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>'+
+    '<input placeholder="Search posts…" value="'+esc(f.q)+'" oninput="igFilter.q=this.value;rerenderIG()"></div>'+
+    '<select class="filter" onchange="igFilter.pillar=this.value;rerenderIG()"><option value="">All pillars</option>'+opt(PILLARS,f.pillar)+'</select>'+
+    '<select class="filter" onchange="igFilter.status=this.value;rerenderIG()"><option value="">All status</option>'+opt(STATUSES,f.status)+'</select>'+
+    '<select class="filter" onchange="igFilter.week=this.value;rerenderIG()"><option value="">All weeks</option>'+opt(weeks,f.week)+'</select>'+
+    '</div>'+
+    '<div class="sec"><span class="hint">'+list.length+' of '+state.ig.length+' posts</span>'+
+    '<span style="margin-left:auto;display:flex;gap:8px;align-items:center">'+densityBar()+
+    '<button class="btn primary" onclick="addIG()">+ New</button></span></div>'+
+    cards;
+}
+function rerenderIG(){
+  document.getElementById('view').innerHTML=renderIG();
+  var s=document.querySelector('.search input');
+  if(s&&igFilter.q){s.focus();s.setSelectionRange(s.value.length,s.value.length);}
+}
+
+function renderYT(){
+  var list=state.yt.slice().sort(function(a,b){return String(a.date||'').localeCompare(String(b.date||''));});
+  var body;
+  if(density==='small'){
+    body = '<div class="clist">'+list.map(function(y){
+      return '<div class="cpost" onclick="editYT(\''+y.id+'\')">'+
+        '<span class="dt">'+esc(y.id)+'</span>'+
+        '<span class="t">'+esc(y.title)+'</span>'+
+        '<span class="pill '+cls(y.status)+'">'+esc(y.status)+'</span></div>';
+    }).join('')+'</div>';
+  } else {
+    body = '<div class="ytlist">'+list.map(function(y){
+      return '<div class="yt" onclick="editYT(\''+y.id+'\')"><div class="yh">'+
+        '<div style="display:flex;gap:13px;min-width:0"><div class="num">'+esc(y.id)+'</div>'+
+        '<div><h3>'+esc(y.title)+'</h3><div class="meta">'+fmtDate(y.date)+' · '+esc(y.month)+'</div></div></div>'+
+        '<span class="pill '+cls(y.status)+'">'+esc(y.status)+'</span></div>'+
+        (y.outline?'<div class="out">'+esc(y.outline)+'</div>':'')+'</div>';
+    }).join('')+'</div>';
+  }
+  return '<div class="sec"><h2>Long-form pipeline</h2><span class="hint">8-min+ videos.</span>'+
+    '<span style="margin-left:auto;display:flex;gap:8px;align-items:center">'+densityBar()+
+    '<button class="btn primary" onclick="addYT()">+ New</button></span></div>'+body;
+}
+
+function renderAsk(){
+  var examples=[
+    'Add a Reel about grip strength in W5',
+    'Give me 5 Reel ideas for September',
+    'Write the full script for the Hyrox recap video',
+    'What is not filmed yet?',
+    'Change Friday W12 to a testimonial'
+  ];
+  var chips=examples.map(function(x){
+    return '<button class="chip" onclick="useExample('+JSON.stringify(x).replace(/"/g,'&quot;')+')">'+esc(x)+'</button>';
+  }).join('');
+
+  var list = requests.slice().reverse().map(function(r){
+    var when='';
+    try{ var d=new Date(r.created); if(!isNaN(d)) when=d.toLocaleString('en-GB',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'}); }catch(e){}
+    return '<div class="req">'+
+      '<div class="rh"><span class="pill '+cls(r.status)+'">'+esc(r.status)+'</span>'+
+      '<span class="rt">'+esc(when)+'</span>'+
+      '<button class="xbtn" onclick="delRequest(\''+r.id+'\',event)">&times;</button></div>'+
+      '<div class="rq">'+esc(r.text)+'</div>'+
+      (r.reply?'<div class="rr">'+esc(r.reply)+'</div>':'')+
+    '</div>';
+  }).join('');
+
+  return '<div class="askbox">'+
+      '<textarea id="askInput" placeholder="Ask for anything: add a post, change something, get ideas, write a script, or ask a question about the plan\u2026" oninput="askText=this.value">'+esc(askText)+'</textarea>'+
+      '<div class="askrow"><span class="hint">Saved to your queue. Tell Claude \u201cdo the calendar\u201d and it gets done.</span>'+
+      '<button class="btn primary" style="margin-left:auto" onclick="sendRequest()">Send</button></div>'+
+      '<div class="chips">'+chips+'</div>'+
+    '</div>'+
+    '<div class="sec"><h2>Your requests</h2><span class="hint">'+requests.length+' total</span></div>'+
+    (list||'<div class="empty-state">Nothing yet. Type a request above \u2014 it works from your phone too.</div>');
+}
+function useExample(t){ askText=t; render();
+  var el=document.getElementById('askInput'); if(el){el.focus(); el.setSelectionRange(el.value.length,el.value.length);} }
+function sendRequest(){
+  var t=(askText||'').trim();
+  if(!t){ var el=document.getElementById('askInput'); if(el) el.focus(); return; }
+  setStatus('saving');
+  call({api:'addrequest',text:t})
+    .then(function(j){ requests=j.requests||[]; askText=''; setStatus('synced'); render(); })
+    .catch(function(e){ setStatus('error'); });
+}
+var armedReq=null;
+function delRequest(id, ev){
+  var btn = ev && ev.target ? ev.target : null;
+  if(armedReq!==id){
+    armedReq=id;
+    if(btn){ btn.classList.add('armed'); btn.textContent='Delete?'; }
+    setTimeout(function(){ if(armedReq===id && btn){ btn.classList.remove('armed'); btn.innerHTML='&times;'; armedReq=null; } },4000);
+    return;
+  }
+  armedReq=null;
+  setStatus('saving');
+  call({api:'delrequest',id:id})
+    .then(function(j){ requests=j.requests||[]; setStatus('synced'); render(); })
+    .catch(function(){ setStatus('error'); });
+}
+
+function openDrawer(){document.getElementById('scrim').classList.add('open');document.getElementById('drawer').classList.add('open');}
+function closeDrawer(){document.getElementById('scrim').classList.remove('open');
+  document.getElementById('drawer').classList.remove('open');drawerCtx=null;render();}
+function field(label,val,key,type){
+  if(type==='textarea')return '<div class="field"><label>'+label+'</label><textarea oninput="setField(\''+key+'\',this.value)">'+esc(val)+'</textarea></div>';
+  return '<div class="field"><label>'+label+'</label><input value="'+esc(val)+'" oninput="setField(\''+key+'\',this.value)"></div>';
+}
+function selField(label,val,key,opts){
+  return '<div class="field"><label>'+label+'</label><select onchange="setField(\''+key+'\',this.value)">'+
+    opts.map(function(o){return '<option '+(o===val?'selected':'')+'>'+o+'</option>';}).join('')+'</select></div>';
+}
+function setField(key,val){ if(!drawerCtx)return; drawerCtx.obj[key]=val; queueSave(); }
+function queueSave(){
+  setStatus('saving'); clearTimeout(saveTimer);
+  var kind=drawerCtx.kind, obj=JSON.parse(JSON.stringify(drawerCtx.obj));
+  saveTimer=setTimeout(function(){
+    call({api:'upsert',kind:kind,data:JSON.stringify(obj)})
+      .then(function(){setStatus('synced');})
+      .catch(function(){setStatus('error');});
+  },700);
+}
+
+function editIG(id){
+  var p=state.ig.filter(function(x){return x.id===id;})[0]; if(!p)return;
+  drawerCtx={obj:p,kind:'ig'};
+  document.getElementById('drawerType').textContent='Instagram · '+p.week;
+  document.getElementById('drawerBody').innerHTML=
+    field('Concept / Title',p.title,'title')+
+    '<div class="row2">'+selField('Pillar',p.pillar,'pillar',PILLARS)+selField('Type',p.type,'type',IG_TYPES)+'</div>'+
+    '<div class="row2">'+field('Publish date',p.date,'date')+field('Day',p.day,'day')+'</div>'+
+    field('Format',p.format,'format')+
+    field('Hook (text / verbal / visual)',p.hook,'hook','textarea')+
+    field('CTA (IG / TikTok)',p.cta,'cta','textarea')+
+    '<div class="row2">'+field('Film by',p.filmBy,'filmBy')+selField('Status',p.status,'status',STATUSES)+'</div>'+
+    field('Seasonal note',p.seasonal,'seasonal')+field('Goal',p.goal,'goal');
+  document.getElementById('drawerFoot').innerHTML=
+    '<button class="del" onclick="delItem(\'ig\',\''+id+'\',event)">Delete post</button>'+
+    '<button class="btn primary" onclick="closeDrawer()">Done</button>';
+  openDrawer();
+}
+function addIG(){
+  var w=state.weeks[0];
+  var p={id:uid('ig'),date:'',day:'Mon',week:w?w.id:'W1',pillar:'Educational',type:'Educational',
+    format:'Reel',title:'New Instagram post',hook:'',cta:'',filmBy:'',goal:'',seasonal:'',status:'Idea'};
+  state.ig.push(p); setStatus('saving');
+  call({api:'upsert',kind:'ig',data:JSON.stringify(p)}).then(function(){setStatus('synced');}).catch(function(){setStatus('error');});
+  editIG(p.id);
+}
+
+function editYT(id){
+  var y=state.yt.filter(function(x){return x.id===id;})[0]; if(!y)return;
+  drawerCtx={obj:y,kind:'yt'};
+  document.getElementById('drawerType').textContent='YouTube · '+y.id;
+  document.getElementById('drawerBody').innerHTML=
+    field('Working title',y.title,'title')+
+    '<div class="row2">'+field('Publish date',y.date,'date')+field('Month',y.month,'month')+'</div>'+
+    '<div class="row2">'+field('Pillar',y.pillar,'pillar')+selField('Status',y.status,'status',STATUSES)+'</div>'+
+    field('Hook (text / verbal)',y.hook,'hook','textarea')+
+    field('Outline / structure',y.outline,'outline','textarea')+
+    field('Pre-production',y.pre,'pre','textarea')+
+    field('Production',y.prod,'prod','textarea')+
+    field('Post-production',y.post,'post','textarea')+
+    field('Monetization note',y.monet,'monet','textarea')+
+    field('IG repurpose assets',y.repurpose,'repurpose','textarea');
+  document.getElementById('drawerFoot').innerHTML=
+    '<button class="del" onclick="delItem(\'yt\',\''+id+'\',event)">Delete video</button>'+
+    '<button class="btn primary" onclick="closeDrawer()">Done</button>';
+  openDrawer();
+}
+function addYT(){
+  var n='YT'+(state.yt.length+1);
+  var y={id:n,date:'',month:'',week:'',title:'New YouTube video',pillar:'Educational',type:'Educational',
+    hook:'',outline:'',pre:'',prod:'',post:'',monet:'Mid-roll ads enabled (8min+)',repurpose:'',status:'Idea'};
+  state.yt.push(y); setStatus('saving');
+  call({api:'upsert',kind:'yt',data:JSON.stringify(y)}).then(function(){setStatus('synced');}).catch(function(){setStatus('error');});
+  editYT(y.id);
+}
+
+function addEvent(weekId){
+  var w=state.weeks.filter(function(x){return x.id===weekId;})[0]; if(!w)return;
+  drawerCtx={obj:{week:weekId,name:'',date:'',ig:true,yt:false},kind:'event'};
+  document.getElementById('drawerType').textContent='Add event · '+weekId;
+  document.getElementById('drawerBody').innerHTML=
+    '<div class="cascade-note">Add an event here (like a Hyrox simulation) and placeholders are created in Instagram and YouTube for <b>'+esc(w.id)+'</b>. Then ask Claude to write the content.</div>'+
+    '<div class="field"><label>Event name</label><input placeholder="e.g. Hyrox simulation at the gym" oninput="drawerCtx.obj.name=this.value"></div>'+
+    '<div class="field"><label>Date (optional, YYYY-MM-DD)</label><input placeholder="2026-10-11" oninput="drawerCtx.obj.date=this.value"></div>'+
+    '<div class="field"><label>Create placeholders for</label>'+
+      '<label class="chk"><input type="checkbox" checked onchange="drawerCtx.obj.ig=this.checked"> Instagram post</label>'+
+      '<label class="chk"><input type="checkbox" onchange="drawerCtx.obj.yt=this.checked"> YouTube video</label></div>';
+  document.getElementById('drawerFoot').innerHTML='<span class="hint">Saved to the sheet</span>'+
+    '<button class="btn primary" onclick="saveEvent()">Add event</button>';
+  openDrawer();
+}
+var armedEvent=null;
+function removeEvent(weekId, idx, ev){
+  if(ev && ev.stopPropagation) ev.stopPropagation();
+  var key=weekId+':'+idx;
+  var btn = ev && ev.target ? ev.target : null;
+  if(armedEvent !== key){
+    if(armedEvent && lastArmedBtn){ lastArmedBtn.classList.remove('armed'); lastArmedBtn.innerHTML='&times;'; }
+    armedEvent = key;
+    if(btn){ btn.classList.add('armed'); btn.textContent='Remove?'; lastArmedBtn = btn; }
+    setTimeout(function(){
+      if(armedEvent===key && lastArmedBtn){ lastArmedBtn.classList.remove('armed'); lastArmedBtn.innerHTML='&times;'; armedEvent=null; }
+    }, 4000);
+    return;
+  }
+  armedEvent=null; lastArmedBtn=null;
+  var w=state.weeks.filter(function(x){return x.id===weekId;})[0]; if(!w) return;
+  var evs=(w.events||[]).slice(); evs.splice(idx,1);
+  setStatus('saving');
+  call({api:'weekevents',week:weekId,events:JSON.stringify(evs)})
+    .then(function(j){ state=j.data; setStatus('synced'); render(); })
+    .catch(function(e){ setStatus('error'); });
+}
+var lastArmedBtn=null;
+var armedDel=null;
+function delItem(kind,id,ev){
+  var btn = ev && ev.target ? ev.target : null;
+  var key=kind+':'+id;
+  if(armedDel!==key){
+    armedDel=key;
+    if(btn){ btn.classList.add('armed'); btn.textContent='Tap again to delete'; }
+    setTimeout(function(){
+      if(armedDel===key && btn){ btn.classList.remove('armed');
+        btn.textContent = (kind==='ig'?'Delete post':'Delete video'); armedDel=null; }
+    }, 4000);
+    return;
+  }
+  armedDel=null;
+  setStatus('saving');
+  call({api:'delete',kind:kind,id:id})
+    .then(function(j){ state=j.data; setStatus('synced'); closeDrawer(); })
+    .catch(function(e){ setStatus('error'); });
+}
+function saveEvent(){
+  var d=drawerCtx.obj;
+  if(!d.name.trim()){alert('Give the event a name');return;}
+  setStatus('saving');
+  call({api:'addevent',week:d.week,name:d.name.trim(),date:d.date,ig:d.ig?'true':'false',yt:d.yt?'true':'false'})
+    .then(function(j){
+      state=j.data; setStatus('synced'); tab='overview';
+      [].forEach.call(document.querySelectorAll('.tab'),function(x){x.classList.toggle('active',x.dataset.tab==='overview');});
+      drawerCtx=null;
+      document.getElementById('scrim').classList.remove('open');
+      document.getElementById('drawer').classList.remove('open');
+      render();
+    })
+    .catch(function(e){ setStatus('error'); alert('Could not save: '+(e.message||e)); });
+}
+
+boot();
+</script>
+</body>
+</html>
